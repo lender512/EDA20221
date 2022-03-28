@@ -1,0 +1,3 @@
+/home/luis/Repos/EDA/EDA2022I/Lab0-RBtree/build/CMakeFiles/rebuild_cache.dir
+/home/luis/Repos/EDA/EDA2022I/Lab0-RBtree/build/CMakeFiles/edit_cache.dir
+/home/luis/Repos/EDA/EDA2022I/Lab0-RBtree/build/CMakeFiles/compilado.dir

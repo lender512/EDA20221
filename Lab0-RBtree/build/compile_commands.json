@@ -1,0 +1,7 @@
+[
+{
+  "directory": "/home/luis/Repos/EDA/EDA2022I/Lab0-RBtree/build",
+  "command": "/usr/bin/g++   -I/home/luis/Repos/EDA/EDA2022I/Lab0-RBtree/./src  -g   -o CMakeFiles/compilado.dir/src/main.cpp.o -c /home/luis/Repos/EDA/EDA2022I/Lab0-RBtree/src/main.cpp",
+  "file": "/home/luis/Repos/EDA/EDA2022I/Lab0-RBtree/src/main.cpp"
+}
+]

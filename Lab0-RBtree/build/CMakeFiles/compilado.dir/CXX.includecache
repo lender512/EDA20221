@@ -1,0 +1,24 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/luis/Repos/EDA/EDA2022I/Lab0-RBtree/src/main.cpp
+iostream
+/home/luis/Repos/EDA/EDA2022I/Lab0-RBtree/src/iostream
+rbtree.cpp
+/home/luis/Repos/EDA/EDA2022I/Lab0-RBtree/src/rbtree.cpp
+
+/home/luis/Repos/EDA/EDA2022I/Lab0-RBtree/src/rbtree.cpp
+algorithm
+-
+rbtree.h
+/home/luis/Repos/EDA/EDA2022I/Lab0-RBtree/src/rbtree.h
+
+/home/luis/Repos/EDA/EDA2022I/Lab0-RBtree/src/rbtree.h
+vector
+/home/luis/Repos/EDA/EDA2022I/Lab0-RBtree/src/vector
+
