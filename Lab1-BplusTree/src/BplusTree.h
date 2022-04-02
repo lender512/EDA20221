@@ -16,7 +16,7 @@ struct Node{
     Node* children[MAX_KEYS + 1];
     bool leaf;
     int size;
-    ~Node() {};
+    
 };
 
 class BplusTree
@@ -309,24 +309,19 @@ public:
     }
     // void borrar(int);
 
+    void deleteRecursive(Node* node) {
+        if (node) {
+            if (!node->leaf){
+                for (int i = 0; i < node->size+1; ++i) {
+                    deleteRecursive(node->children[i]);
+                }
+            }
+            delete node;
+        }
+    }
+
     ~BplusTree() {
-        // if(root == nullptr) return;
-        // queue<Node*> q;
-        // q.push(root);
-        // while(!q.empty()){
-        //     const Node* current = q.front();
-        //     if (!current->leaf) {
-        //         for(int i = 0; i< current->size+1; ++i){
-        //             if(current->children[i] != nullptr){
-        //                 q.push(current->children[i]);
-        //             } 
-        //         }
-        //     }
-        //     q.pop();
-        //     // delete current;
-        //     // https://stackoverflow.com/questions/654754/what-really-happens-when-you-dont-free-after-malloc-before-program-termination
-        //     // :C
-        // } 
+        deleteRecursive(root);
         return;
     
     }
