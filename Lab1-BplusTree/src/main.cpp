@@ -3,6 +3,9 @@
 
 #include <fstream>
 #include <chrono>
+#include <vector>
+
+using namespace std;
 
 int main() {
     // Read file
@@ -33,17 +36,23 @@ int main() {
         // Calcular tiempo
         auto tiempo = std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count();
         tiempoInseccion += tiempo;
+
+        delete tree;
+        // https://stackoverflow.com/questions/654754/what-really-happens-when-you-dont-free-after-malloc-before-program-termination
+        // :C
     }
 
+    std::cout << "Tiempo Inseccion: " << tiempoInseccion << std::endl;
 
     // BplusTree* tree = new BplusTree();
 
     // for (int i=0; i < 1000000; ++i){
-    //         tree->insertar(datos[i]);
+    //     tree->insertar(datos[i]);
     // }
-    // std::cout << "Tiempo Inseccion: " << tiempoInseccion << std::endl;
-    // vector<int> v = tree->bfs();
+
+    // auto v = tree->bfs();
     // for (int i=0; i < v.size(); i++) {
-    //     cout << v[i] << endl;
+    //     cout << v[i] << "\n";
     // }
+
 }

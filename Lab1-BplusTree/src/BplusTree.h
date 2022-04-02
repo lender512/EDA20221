@@ -6,6 +6,7 @@
 #include <vector>
 #include <math.h>
 #include <queue>
+#include <set>
 
 using namespace std;
 
@@ -13,9 +14,9 @@ using namespace std;
 struct Node{
     int keys[MAX_KEYS];
     Node* children[MAX_KEYS + 1];
-    Node* parent;
     bool leaf;
     int size;
+    ~Node() {};
 };
 
 class BplusTree
@@ -65,7 +66,6 @@ private:
             }
     
             int i = 0;
-            int j;
     
             // Econtrar el indicide done debe ir el nuevo elemento
             while (n > auxArray[i] && i < MAX_KEYS) {
@@ -86,13 +86,18 @@ private:
             auxChildren[i + 1] = child;
             newNode->leaf = false;
 
-
             int newSize = (MAX_KEYS + 1)/2;
 
+            //Copiar parte de los valores del array auxiliar que
+            //se mantendrán en los nodos
+            for (int j = 0; j < newSize + 1; j++) {
+                if (j < newSize)
+                    node->keys[j] = auxArray[j];
+                node->children[j] = auxChildren[j];
+            }
             node->size = newSize;
-            newNode->size = MAX_KEYS - newSize;
-    
-            ///Copiar parte de los valores del array auxiliar que
+            
+            //Copiar parte de los valores del array auxiliar que
             //Iran al nuevo nodo
             int k = newSize + 1;
             for (i = 0; i < MAX_KEYS - newSize + 1; i++) {
@@ -101,30 +106,31 @@ private:
                 newNode->children[i] = auxChildren[k];
                 k++;
             }
+            newNode->size = MAX_KEYS - newSize;
     
-    
-            if (node == root) {
-                //El nodo que se spliteo fue el root
-                Node* newRoot = new Node;
-    
-                newRoot->keys[0] = node->keys[node->size];
-                // Asignas los hijos spliteados
-                newRoot->children[0] = node;
-                newRoot->children[1] = newNode;
-                newRoot->leaf = false;
-                newRoot->size = 1;
-                root = newRoot;
-            } else {
+            if (node != root) {
                 //El nuevo nodo va a tener que ser insertado entre los nodos internos
-                insertarRecursive(node->keys[node->size],Parent(root, node), newNode);
-            }
+                insertarRecursive(auxArray[node->size],Parent(root, node), newNode);
+                return;
+            } 
+            //El nodo que se spliteo fue el root
+            Node* newRoot = new Node;
+
+            newRoot->keys[0] = auxArray[node->size];
+            // Asignas los hijos spliteados
+            newRoot->children[0] = node;
+            newRoot->children[1] = newNode;
+            newRoot->leaf = false;
+            newRoot->size = 1;
+            root = newRoot;
+            
         }
     }
     Node* Parent(Node* node, Node* child) {
-        Node* parent;
+        Node* parent = nullptr;
 
         if (node->leaf || (node->children[0])->leaf) {
-            //No se encontro padre, es root
+            //No se encontro padre
             return nullptr;
         }
     
@@ -156,7 +162,7 @@ public:
         } else {
             //El arbol no está vacio
             Node* node = root;
-            Node* parent;
+            Node* parent = nullptr;
     
             //Iterar hasta que se encuentre el nodo
             //hoja donde tiene que estar el valor
@@ -216,7 +222,6 @@ public:
                     auxArray[i] = node->keys[i];
                 }
                 int i = 0;
-                int j;
 
                 // Econtrar el indicide done debe ir el nuevo elemento
                 while (n > auxArray[i] && i < MAX_KEYS) {
@@ -259,25 +264,24 @@ public:
                 node->size = newSize;
                 newNode->size = MAX_KEYS + 1 - newSize;
 
-                if (node == root) {
-                    //El nodo que se spliteo fue el root
-
-                    //Creas un nodo nuevo
-                    Node* newRoot = new Node;
-
-                    // Repites el valor
-                    newRoot->keys[0] = newNode->keys[0];
-                    // Asignas los hijos spliteados
-                    newRoot->children[0] = node;
-                    newRoot->children[1] = newNode;
-                    newRoot->leaf = false;
-                    newRoot->size = 1;
-                    root = newRoot;
-                }
-                else {
+                if (node != root) {
                     //El nuevo nodo va a tener que ser insertado entre los nodos internos
                     insertarRecursive(newNode->keys[0], parent, newNode);
+                    return;
                 }
+                //El nodo que se spliteo fue el root
+
+                //Creas un nodo nuevo
+                Node* newRoot = new Node;
+
+                // Repites el valor
+                newRoot->keys[0] = newNode->keys[0];
+                // Asignas los hijos spliteados
+                newRoot->children[0] = node;
+                newRoot->children[1] = newNode;
+                newRoot->leaf = false;
+                newRoot->size = 1;
+                root = newRoot;
             }
         }
     }
@@ -305,7 +309,27 @@ public:
     }
     // void borrar(int);
 
-    // ~BplusTree();
+    ~BplusTree() {
+        // if(root == nullptr) return;
+        // queue<Node*> q;
+        // q.push(root);
+        // while(!q.empty()){
+        //     const Node* current = q.front();
+        //     if (!current->leaf) {
+        //         for(int i = 0; i< current->size+1; ++i){
+        //             if(current->children[i] != nullptr){
+        //                 q.push(current->children[i]);
+        //             } 
+        //         }
+        //     }
+        //     q.pop();
+        //     // delete current;
+        //     // https://stackoverflow.com/questions/654754/what-really-happens-when-you-dont-free-after-malloc-before-program-termination
+        //     // :C
+        // } 
+        return;
+    
+    }
 };
 
 #endif
