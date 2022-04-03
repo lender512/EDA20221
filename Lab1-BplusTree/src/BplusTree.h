@@ -1,7 +1,7 @@
 
 #ifndef BPLUSTREE_H
 #define BPLUSTREE_H
-#define MAX_KEYS 21-1
+#define MAX_KEYS 3
 
 #include <vector>
 #include <math.h>
@@ -9,6 +9,8 @@
 #include <set>
 
 using namespace std;
+
+int MIN_KEYS = ceil(MAX_KEYS/2);
 
 
 struct Node{
@@ -307,7 +309,115 @@ public:
         }
         return result;
     }
-    // void borrar(int);
+    
+    void borrar(int n) {
+        if (root == nullptr) {
+            //El arbol está vacio
+            return;
+        }
+        bool reachEnd = false;
+        Node* node = root;
+        Node* parent = nullptr;
+        int nodeIndex = 0;
+
+        //Iterar hasta que se encuentre el nodo
+        //hoja donde tiene que estar el valor
+        do {
+            //Guardar referencia al padre
+            if (node->leaf) {
+                reachEnd = true;
+            }
+            int savedSize = node->size;
+            for (int i = 0; i < savedSize; i++) {
+                if (n == node->keys[i]) {
+                    node->size--;
+                    //Guardo el nodo n, donde aparece por primera vez la k
+                    if (!node->leaf) {
+                        //Eliminar n del nodo
+                        for (int j = node->size; j >= i; j--) {
+                            //Shiftear valores hacia la izquierda borrando el requerido
+                            node->keys[j] = node->keys[j+1]; 
+                        }
+                        if (node->size >= MIN_KEYS) {
+                            //Done
+                        }
+                    } else if (node->leaf) {
+                        //Eliminar n del nodo
+                        for (int j = node->size-1; j >= i; j--) {
+                            //Shiftear valores hacia la izquierda borrando el requerido
+                            node->keys[j] = node->keys[j+1]; 
+                        }
+                        if (node->size >= MIN_KEYS) {
+                            //nodo tiene mas o el minimo de keys
+                            if (i==0) {
+                                //Si el eliminado fue el menor, push up el siguiente
+                                int place = 0;
+                                while (parent->keys[place] < node->keys[i] && place < parent->size) {
+                                    place++;
+                                }
+                                parent->size++;
+                                for (int k = parent->size; k > place; k--) {
+                                    //Shiftear a la derecha valores para pushear el nuevo key
+                                    parent->keys[k] = parent->keys[k-1];
+                                }
+                                parent->keys[place] = node->keys[i];
+                            }
+                            return;
+                        } else {
+                            //nodo tiene menos del minimo de keys
+                            if (node-1 >= 0) {
+                                //revisar si el hermano izquierdo puede prestar
+                                Node* leftSibiling = parent->children[i-1];
+                            }
+                            if (i+1 <= parent->size+1) {
+                                //revisar si el hermano derecho puede prestar
+                                Node* rightSibiling = parent->children[i+1];
+                            }
+                        }
+                    }
+                }
+                if (n < node->keys[i]) {
+                    //Se econtró por donde debe ir el node
+                    // (hijo izquierdo)
+                    parent = node;
+                    node = node->children[i];
+                    nodeIndex = i;
+                    break;
+                }
+                if (i == savedSize - 1) {
+                    //Llego al final, debe bajar por el 
+                    // Hijo derecho
+                    parent = node;
+                    node = node->children[i + 1];
+                    nodeIndex = i;
+                    break;
+                }
+            }
+
+        } while (!reachEnd);
+
+        // int foundIdx = 0;
+        // bool found = false;
+        // for (int i = 0; i < node->size; i++) {
+        //     if (node->keys[i] == n){
+        //         found = true;
+        //         foundIdx = i;
+        //         if (!repeatedNode) {
+        //             repeatedNode = node;
+        //         }
+        //     }
+                
+        // }
+        // if (!found) {
+        //     //El valor a eliminar no existe en el arbol.
+        //     return;
+        // }
+
+        // node->size--;
+        // if (repeatedNode->leaf) {
+            
+        // }
+    }
 
     void deleteRecursive(Node* node) {
         if (node) {
