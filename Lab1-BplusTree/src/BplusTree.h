@@ -7,6 +7,7 @@
 #include <math.h>
 #include <queue>
 #include <set>
+#include <stack>
 
 using namespace std;
 
@@ -317,9 +318,225 @@ public:
         }
         bool reachEnd = false;
         Node* node = root;
+        stack<Node*> path;
+        path.push(node);
+
+        while (!node->leaf) {
+
+            for (int i = 0; i < node->size; i++) {
+                if (n < node->keys[i]) {
+                    //Se econtró por donde debe ir el node
+                    // (hijo izquierdo)
+                    node = node->children[i];
+                    path.push(node);
+                    break;
+                }
+                if (i == node->size - 1) {
+                    //Llego al final, debe bajar por el 
+                    // Hijo derecho
+                    node = node->children[i + 1];
+                    path.push(node);
+                    break;
+                }
+            }
+        }
+
+        while (!path.empty()) {
+            Node* node = path.top();
+            int nodeIndex = 0;
+            path.pop();
+            Node* parent = nullptr;
+            if (!path.empty()) {
+                parent = path.top();
+                for (int i = 0; i < parent->size; i++) {
+                    if (parent->children[i] == node) {
+                        nodeIndex = i;
+                        break;
+                    }
+                }
+            }
+            int savedSize = node->size;
+
+            //Guardar una referencia a los nodos sin alterar
+            int savedKeys[MAX_KEYS];
+            for (int i = 0; i < node->size; i++) {
+                savedKeys[i] = node->keys[i]; 
+            }
+
+            for (int i = 0; i < savedSize; i++) {
+                if (n == savedKeys[i]) {
+                    node->size--;
+                    //El valor se encuentra en el nodo
+                    if (node == root) {
+                        for (int j = savedSize; j >= i; j--) {
+                            //Shiftear valores hacia la izquierda borrando el requerido
+                            node->keys[j] = node->keys[j+1]; 
+                        }
+                        if (savedSize > 1) {
+                            //El nodo se queda uno o más elementos
+                            //Done
+                        } else {
+                            if (node->children[1]->size > MIN_KEYS) {
+                                Node* temp = node->children[1];
+                                while (!temp->leaf) {
+                                    temp = temp->children[0];
+                                }
+                                //El hijo derecho puede prestar
+                                node->keys[0] = temp->keys[0];
+                                node->size++;
+                            } else {
+                                Node* temp = node->children[1];
+                                while (!temp->leaf) {
+                                    temp = temp->children[0];
+                                }
+                                //El hijo derecho puede prestar
+                                node->keys[0] = temp->keys[0];
+                                node->size++;
+                            }
+                        }
+                    } else if (!node->leaf) {
+
+                    } else if (node->leaf) {
+                        //Eliminar n del nodo
+                        for (int j = i; j < savedSize; j++) {
+                            //Shiftear valores hacia la izquierda borrando el requerido
+                            node->keys[j] = node->keys[j+1]; 
+                        }
+
+                        if (node->size >= MIN_KEYS) {
+                            //nodo tiene mas o el minimo de keys
+                            if (i==0) {
+                                bool found = false;
+                                //Si el eliminado fue el menor, push up el siguiente
+                                while (!found) {
+                                    Node* parent = path.top();
+                                    for (int j = 0; j < parent->size; j++) {
+                                        if (n == parent->keys[j]) {
+                                            found = true;
+                                            parent->keys[j] = node->keys[0];
+                                        }
+                                    }
+                                    path.pop();
+                                }
+                                
+                            }
+                            return;
+                        } else {
+                            //nodo tiene menos del minimo de keys
+                            if ((nodeIndex-1 >= 0 && parent->children[nodeIndex-1]->size > MIN_KEYS) ||  parent->children[nodeIndex+1] == node){
+                                //Hermano izquierdo puede prestar
+                                Node* leftSibiling;
+                                if (parent->children[nodeIndex+1] == node) {
+                                    leftSibiling = parent->children[nodeIndex];
+                                } else {
+                                    leftSibiling = parent->children[nodeIndex-1];
+                                }
+
+                                int place = 0;
+                                while (node->keys[place] < leftSibiling->keys[leftSibiling->size-1] && place < node->size) {
+                                    place++;
+                                }
+                                node->size++;
+                                for (int k = node->size; k > place; k--) {
+                                    //Shiftear a la derecha valores
+                                    node->keys[k] = node->keys[k-1];
+                                }
+                                node->keys[place] = leftSibiling->keys[leftSibiling->size-1];
+
+                                //Eliminar ultimo del left sibiling
+                                leftSibiling->size--;
+
+                                //El padre pasa a tener el key del nuevo minimo del hermano derecho
+                                place = 0;
+                                while (parent->keys[place] < node->keys[0] && place < parent->size) {
+                                    place++;
+                                }
+                                // parent->size++;
+                                // for (int k = parent->size; k > place; k--) {
+                                //     //Shiftear a la derecha valores
+                                //     parent->keys[k] = parent->keys[k-1];
+                                // }
+                                parent->keys[place] = node->keys[0];
+
+                            } else if (nodeIndex+1 <= parent->size && parent->children[nodeIndex+1]->size > MIN_KEYS) {
+                                //hermano derecho puede prestar
+                                Node* rightSibiling = parent->children[nodeIndex+1];
+                                //hermano derecho presta al nodo
+                                int place = 0;
+                                while (node->keys[place] < rightSibiling->keys[0] && place < node->size) {
+                                    place++;
+                                }
+                                node->size++;
+                                for (int k = node->size; k > place; k--) {
+                                    //Shiftear a la derecha valores
+                                    node->keys[k] = node->keys[k-1];
+                                }
+                                node->keys[place] = rightSibiling->keys[0];
+
+                                //shift a la izquierda del right sibiling
+                                rightSibiling->size--;
+                                for (int k = 0; k < rightSibiling->size; k++) {
+                                    rightSibiling->keys[k] = rightSibiling->keys[k+1];
+                                }
+
+                                //El padre pasa a tener el key del nuevo minimo del hermano derecho
+                                parent->keys[nodeIndex] = rightSibiling->keys[0];
+                            } else {
+                                //TODO left
+                                //Ningun hermano le puede prestar
+                                if (nodeIndex+1 <= parent->size) {
+                                    
+                                }
+                                if (nodeIndex+1 <= parent->size) {
+                                    //Existe un hermano derecho con el que se puede mergear
+                                    Node* rightSibiling = parent->children[nodeIndex+1];
+
+                                    int auxArray[MAX_KEYS];
+                                    int j = 0;
+                                    //Copiamos los valores del node
+                                    for (int k = 0; k < node->size; k++) {
+                                        auxArray[k] = node->keys[k];
+                                        j++;
+                                    }
+                                    //Copiamos los valores del hermano derecho
+                                    for (int k = 0; k < rightSibiling->size; k++) {
+                                        auxArray[j+k] = rightSibiling->keys[k];
+                                    }
+                                    int newSize = node->size + rightSibiling->size;
+                                    rightSibiling->size = newSize;
+                                    for (int k = 0; k < newSize; k++) {
+                                        rightSibiling->keys[k] = auxArray[k];
+                                    }
+
+                                    parent->size--;
+                                    //Shifteamos parent a la izquierda
+                                    for (int k = nodeIndex; k < parent->size+1; k++) {
+                                        if (k < parent->size) {
+                                            parent->keys[k] = parent->keys[k+1];
+                                        }
+                                        parent->children[k] = parent->children[k+1];
+                                    }
+                                    bool found = false;
+                                    while (!found) {
+                                        Node* parent = path.top();
+                                        for (int j = 0; j < parent->size; j++) {
+                                            if (n == parent->keys[j]) {
+                                                found = true;
+                                                parent->keys[j] = rightSibiling->keys[0];
+                                            }
+                                        }
+                                        path.pop();
+                                    }
+                                }   
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return;
         Node* parent = nullptr;
         int nodeIndex = 0;
-
         //Iterar hasta que se encuentre el nodo
         //hoja donde tiene que estar el valor
         do {
@@ -328,22 +545,92 @@ public:
                 reachEnd = true;
             }
             int savedSize = node->size;
+            int savedKeys[MAX_KEYS];
+
+            for (int i = 0; i < node->size; i++) {
+                savedKeys[i] = node->keys[i]; 
+            }
+
             for (int i = 0; i < savedSize; i++) {
-                if (n == node->keys[i]) {
+                if (n == savedKeys[i]) {
                     node->size--;
                     //Guardo el nodo n, donde aparece por primera vez la k
-                    if (!node->leaf) {
+                    if (node == root) {
+                        for (int j = savedSize; j >= i; j--) {
+                            //Shiftear valores hacia la izquierda borrando el requerido
+                            node->keys[j] = node->keys[j+1]; 
+                        }
+                        if (savedSize > 1) {
+                            //El nodo se queda uno o más elementos
+                            //Done
+                        } else {
+                            if (node->children[1]->size > MIN_KEYS) {
+                                //El hijo derecho puede prestar
+                                node->keys[0] = node->children[1]->keys[0];
+                                node->size++;
+                            } else {
+                                //Ningun hijo puede prestar
+                                Node* leftChild = node->children[0];
+                                Node* rightChild = node->children[1];
+
+                                
+                                for (int k = 0; k < rightChild->size; k++) {
+                                    leftChild->keys[k+leftChild->size] = rightChild->keys[k];
+                                }
+                                for (int k = 0; k < rightChild->size+1; k++) {
+                                    leftChild->children[k+leftChild->size+1] = rightChild->children[k];
+                                }
+                                leftChild->size += rightChild->size;
+                                
+
+                                root = leftChild;
+                                //restart search
+                                node = root;
+                                break;
+                                
+                            }
+                        }
+                    } else if (!node->leaf) {
                         //Eliminar n del nodo
-                        for (int j = node->size; j >= i; j--) {
+                        for (int j = i; j < savedSize; j++) {
                             //Shiftear valores hacia la izquierda borrando el requerido
                             node->keys[j] = node->keys[j+1]; 
                         }
                         if (node->size >= MIN_KEYS) {
+                            //nodo quedó con cantidad mayor o igual del minimo de keys
                             //Done
+                        } else {
+                            //nodo quedó con menos que el minimo de keys
+                             if ((nodeIndex-1 >= 0 && parent->children[nodeIndex-1]->size > MIN_KEYS) ||  parent->children[nodeIndex+1] == node) {
+                                //Hermano izquierdo puede prestar
+                                Node* leftSibiling;
+                                if (parent->children[nodeIndex+1] == node) {
+                                    leftSibiling = parent->children[nodeIndex];
+                                } else {
+                                    leftSibiling = parent->children[nodeIndex-1];
+                                }
+                                node->size++;
+                                //Shidtear a la derecha
+                                for (int j = savedSize+1; j >= i ; j--) {
+                                    if (j < savedSize + 1) {
+                                        node->keys[j] = node->keys[j-1];
+                                    }
+                                    node->children[j] = node->children[j-1];
+
+                                }
+                                node->keys[i] = parent->keys[nodeIndex];
+                                node->children[0] = leftSibiling->children[leftSibiling->size];
+
+                                parent->keys[nodeIndex] = leftSibiling->keys[leftSibiling->size-1];
+                                leftSibiling->size--;
+                                
+                                
+
+                             }
                         }
                     } else if (node->leaf) {
                         //Eliminar n del nodo
-                        for (int j = node->size-1; j >= i; j--) {
+                        for (int j = i; j < savedSize; j++) {
                             //Shiftear valores hacia la izquierda borrando el requerido
                             node->keys[j] = node->keys[j+1]; 
                         }
@@ -365,18 +652,103 @@ public:
                             return;
                         } else {
                             //nodo tiene menos del minimo de keys
-                            if (node-1 >= 0) {
-                                //revisar si el hermano izquierdo puede prestar
-                                Node* leftSibiling = parent->children[i-1];
+                            if ((nodeIndex-1 >= 0 && parent->children[nodeIndex-1]->size > MIN_KEYS) ||  parent->children[nodeIndex+1] == node){
+                                //Hermano izquierdo puede prestar
+                                Node* leftSibiling;
+                                if (parent->children[nodeIndex+1] == node) {
+                                    leftSibiling = parent->children[nodeIndex];
+                                } else {
+                                    leftSibiling = parent->children[nodeIndex-1];
+                                }
+
+                                int place = 0;
+                                while (node->keys[place] < leftSibiling->keys[leftSibiling->size-1] && place < node->size) {
+                                    place++;
+                                }
+                                node->size++;
+                                for (int k = node->size; k > place; k--) {
+                                    //Shiftear a la derecha valores
+                                    node->keys[k] = node->keys[k-1];
+                                }
+                                node->keys[place] = leftSibiling->keys[leftSibiling->size-1];
+
+                                //Eliminar ultimo del left sibiling
+                                leftSibiling->size--;
+
+                                //El padre pasa a tener el key del nuevo minimo del hermano derecho
+                                place = 0;
+                                while (parent->keys[place] < node->keys[0] && place < parent->size) {
+                                    place++;
+                                }
+                                parent->size++;
+                                for (int k = parent->size; k > place; k--) {
+                                    //Shiftear a la derecha valores
+                                    parent->keys[k] = parent->keys[k-1];
+                                }
+                                parent->keys[place] = node->keys[0];
+
+                            } else if (nodeIndex+1 <= parent->size && parent->children[nodeIndex+1]->size > MIN_KEYS) {
+                                //hermano derecho puede prestar
+                                Node* rightSibiling = parent->children[nodeIndex+1];
+                                //hermano derecho presta al nodo
+                                int place = 0;
+                                while (node->keys[place] < rightSibiling->keys[0] && place < node->size) {
+                                    place++;
+                                }
+                                node->size++;
+                                for (int k = node->size; k > place; k--) {
+                                    //Shiftear a la derecha valores
+                                    node->keys[k] = node->keys[k-1];
+                                }
+                                node->keys[place] = rightSibiling->keys[0];
+
+                                //shift a la izquierda del right sibiling
+                                rightSibiling->size--;
+                                for (int k = 0; k < rightSibiling->size; k++) {
+                                    rightSibiling->keys[k] = rightSibiling->keys[k+1];
+                                }
+
+                                //El padre pasa a tener el key del nuevo minimo del hermano derecho
+                                parent->keys[nodeIndex] = rightSibiling->keys[0];
+                            } else {
+                                //Sus hermanos no pueden prestarle elementos
+                                //TODO left
+                                if (nodeIndex+1 <= parent->size) {
+                                    //Existe un hermano derecho con el que se puede mergear
+                                    Node* rightSibiling = parent->children[nodeIndex+1];
+
+                                    int auxArray[MAX_KEYS];
+                                    int j = 0;
+                                    //Copiamos los valores del node
+                                    for (int k = 0; k < node->size; k++) {
+                                        auxArray[k] = node->keys[k];
+                                        j++;
+                                    }
+                                    //Copiamos los valores del hermano derecho
+                                    for (int k = 0; k < rightSibiling->size; k++) {
+                                        auxArray[j+k] = rightSibiling->keys[k];
+                                    }
+                                    int newSize = node->size + rightSibiling->size;
+                                    rightSibiling->size = newSize;
+                                    for (int k = 0; k < newSize; k++) {
+                                        auxArray[k] = rightSibiling->keys[k];
+                                    }
+
+                                    parent->size--;
+                                    //Shifteamos parent a la izquierda
+                                    for (int k = nodeIndex; k < parent->size+1; k++) {
+                                        if (k < parent->size) {
+                                            parent->keys[k] = parent->keys[k+1];
+                                        }
+                                        parent->children[k] = parent->children[k+1];
+                                    }
+                                }   
                             }
-                            if (i+1 <= parent->size+1) {
-                                //revisar si el hermano derecho puede prestar
-                                Node* rightSibiling = parent->children[i+1];
-                            }
+                            
                         }
                     }
                 }
-                if (n < node->keys[i]) {
+                if (n < savedKeys[i]) {
                     //Se econtró por donde debe ir el node
                     // (hijo izquierdo)
                     parent = node;
