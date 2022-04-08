@@ -45,12 +45,6 @@ int main() {
 
     BplusTree* tree = new BplusTree();
 
-    // for (int i=0; i < 1000000; ++i){
-    //     tree->insertar(datos[i]);
-    // }
-    // for (int i=0; i < 100; ++i){
-    //     tree->borrar(datos[i]);
-    // }
     tree->insertar(1);
     tree->insertar(4);
     tree->insertar(7);

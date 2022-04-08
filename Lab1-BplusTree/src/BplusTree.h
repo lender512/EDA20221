@@ -1,7 +1,7 @@
 
 #ifndef BPLUSTREE_H
 #define BPLUSTREE_H
-#define MAX_KEYS 20
+#define MAX_KEYS 3
 
 #include <vector>
 #include <math.h>
@@ -11,7 +11,7 @@
 
 using namespace std;
 
-int MIN_KEYS = ceil(MAX_KEYS/2);
+int MIN_KEYS = ceil((MAX_KEYS+1)/2.0-1);
 
 
 struct Node{
@@ -319,9 +319,13 @@ public:
     }
 
     void deleteChildren(Node* node, int childIdx) {
-        for(int i = childIdx; i < node->size+1; i++) {
+        int i;
+        for(i = childIdx; i < node->size+1; i++) {
             node->children[i] = node->children[i+1];
         }
+        // while (i <= MAX_KEYS) {
+        //     node->children[i] = nullptr;
+        // }
     }
 
     void passChildLeftRight(Node* leftChild, Node* node){
@@ -351,10 +355,14 @@ public:
     }
     
     void deleteNode(Node * node, Node* parent, int nodeIndex, int savedSize, int n, int savedKeys[], stack<Node*> &path) {
+        if (node == root && node->size == 0) {
+                        root = node->children[0];
+                        }
         for (int i = 0; i < savedSize; i++) {
                 if (n == savedKeys[i]) {
                     // node->size--;
                     //El valor se encuentra en el nodo
+                    
                     if (node == root) {
                         remove(node, n);
 
@@ -363,11 +371,15 @@ public:
                             //Done
                         } else {
                             if (node->children[1]->size > MIN_KEYS) {
+                                //Presta del hijo derecho
                                 Node* rightChild = node->children[1];
                                 insertOrdered(node, rightChild->keys[0]);
                                 remove(rightChild, rightChild->keys[0]);
+                            } else if (node->children[0]->size > MIN_KEYS) {
+                                Node* leftChild = node->children[0];
+                                insertOrdered(node, leftChild->keys[leftChild->size-1]);
+                                remove(leftChild, leftChild->keys[leftChild->size-1]);
                             } else {
-                                
                             }
                         }
                     } else if (!node->leaf) {
@@ -393,18 +405,52 @@ public:
                                 node->children[0] = leftSibiling->children[leftSibiling->size];
                                 //Remove last element of leftSibiling
                                 leftSibiling->size--;
+
                             }
                             else if (nodeIndex+1 <= parent->size && parent->children[nodeIndex+1]->size > MIN_KEYS) {
                                 //Hermano derecho puede prestar
+                                Node* rightSibiling = parent->children[nodeIndex+1];
+                                insertOrdered(node, parent->keys[nodeIndex]);
+                                parent->keys[nodeIndex] = rightSibiling->keys[0];
+
+                                node->children[node->size] = rightSibiling->children[0];
+
+                                for (int j = 0; j < rightSibiling->size+1; j++){
+                                    rightSibiling->children[j] = rightSibiling->children[j+1];
+                                }
+                                remove(rightSibiling, rightSibiling->keys[0]);
+
+
                             } else {
-                                if (nodeIndex+1 <= parent->size) {
+                                if ((nodeIndex-1 >= 0 > MIN_KEYS) || parent->children[nodeIndex+1] == node) {
+                                    //Puede hacer merge con el hermano izquierdo
+                                    Node* leftSibiling;
+                                    if (nodeIndex-1 >= 0 && parent->children[nodeIndex-1]->size > MIN_KEYS) {
+                                        leftSibiling = parent->children[nodeIndex-1];
+                                    } else {
+                                        leftSibiling = parent->children[nodeIndex];
+                                    }
+                                    insertOrdered(node,  parent->keys[nodeIndex]);
+                                    parent->keys[nodeIndex] = n;
+                                    parent->size--;
+                                    for (int j = 0; j < node->size+1; j++) {
+                                        leftSibiling->children[leftSibiling->size+j] = node->children[j];
+                                    }
+                                    merge(leftSibiling, node);
+                                    deleteChildren(parent, nodeIndex+1);
+
+                                } else if (nodeIndex+1 <= parent->size) {
                                     //Puede hacer merge con el hermano derecho
                                     Node* rightSibiling = parent->children[nodeIndex+1];
+                                    insertOrdered(node,  parent->keys[nodeIndex]);
+                                    parent->keys[nodeIndex] = n;
+                                    parent->size--;
                                     merge(node, rightSibiling);
                                     for (int j = 0; j < rightSibiling->size+1; j++) {
                                         node->children[savedSize+j] = rightSibiling->children[j];
                                     }
                                     deleteChildren(parent, nodeIndex+1);
+
                                     // deleteNode(parent, nullptr, 0, parent->size, )
                                 }
                             }
@@ -448,7 +494,7 @@ public:
                                 // node->size++;
                                 insertOrdered(node, leftSibiling->keys[leftSibiling->size-1]);
                                 insertOrdered(parent, leftSibiling->keys[leftSibiling->size-1]);
-                                leftSibiling->size--;
+                                leftSibiling->size--;   
 
                             } else if (nodeIndex+1 <= parent->size && parent->children[nodeIndex+1]->size > MIN_KEYS) {
                                 //hermano derecho puede prestar
@@ -506,7 +552,9 @@ public:
         Node* node = root;
         stack<Node*> path;
         path.push(node);
-
+        if (node == nullptr) {
+            return;
+        }
         while (!node->leaf) {
 
             for (int i = 0; i < node->size; i++) {
@@ -525,6 +573,7 @@ public:
                     break;
                 }
             }
+            
         }
 
         while (!path.empty()) {
