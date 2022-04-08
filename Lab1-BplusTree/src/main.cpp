@@ -45,33 +45,34 @@ int main() {
 
     BplusTree* tree = new BplusTree();
 
-    for (int i=0; i < 1000000; ++i){
-        tree->insertar(datos[i]);
-    }
-    for (int i=0; i < 1000000/2; ++i){
-        tree->borrar(datos[i]);
-    }
-    // tree->insertar(1);
-    // tree->insertar(4);
-    // tree->insertar(7);
-    // tree->insertar(10);
-    // tree->insertar(17);
-    // tree->insertar(21);
-    // tree->insertar(31);
-    // tree->insertar(25);
-    // tree->insertar(19);
-    // tree->insertar(20);
-    // tree->insertar(28);
-    // tree->insertar(42);
+    // for (int i=0; i < 1000000; ++i){
+    //     tree->insertar(datos[i]);
+    // }
+    // for (int i=0; i < 100; ++i){
+    //     tree->borrar(datos[i]);
+    // }
+    tree->insertar(1);
+    tree->insertar(4);
+    tree->insertar(7);
+    tree->insertar(10);
+    tree->insertar(17);
+    tree->insertar(21);
+    tree->insertar(31);
+    tree->insertar(25);
+    tree->insertar(19);
+    tree->insertar(20);
+    tree->insertar(28);
+    tree->insertar(42);
 
-    // tree->borrar(21);
-    // tree->borrar(31);
-    // tree->borrar(20);
-    // tree->borrar(10);
-    // tree->borrar(7);
-    // tree->borrar(25);
-    // tree->borrar(42);
-    // tree->borrar(17);
+    tree->borrar(21);
+    tree->borrar(31);
+    tree->borrar(20);
+    tree->borrar(10);
+    tree->borrar(7);
+    tree->borrar(25);
+    tree->borrar(42);
+    tree->borrar(17);
+    tree->borrar(4);
 
     auto v = tree->bfs();
     for (int i=0; i < v.size(); i++) {
